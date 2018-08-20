@@ -1,7 +1,7 @@
 <ExD 
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
   xmlns="http://schemas.humanbrainproject.eu/SP10/2014/ExDConfig" xsi:schemaLocation="http://schemas.humanbrainproject.eu/SP10/2014/ExDConfig ../ExDConfFile.xsd">
-  <name>Floreano Experiment</name>
+  <name>Floreano Experiment (under development)</name>
   <thumbnail>floreano.png</thumbnail>
   <description>This experiment loads the Husky robot in an box with marked walls. With the marks on the wall the robot is able to navigate/drive around inside the box, without colliding with the wall.</description>
   <timeout>999999</timeout>
