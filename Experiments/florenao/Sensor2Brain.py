@@ -35,7 +35,7 @@ def Sensor2Brain(t, ideal_wheel_speed, real_wheel_speed, camera, r1, r2, r3, r4,
             rate = (im_bw.item(index)/6.0 + im_bw.item(index + 1)/3.0 + im_bw.item(index + 2)/3.0 + im_bw.item(index + 3)/6.0)/255.
             if np.random.rand() <= rate:
                 clientLogger.info(i)
-            	visual_receptors[i].amplitude = 0.05
+            	visual_receptors[i].amplitude = 0.02
             else:
                 visual_receptors[i].amplitude = 0.0
         clientLogger.info('--------------------------------')
