@@ -1,4 +1,3 @@
-# Imported Python Transfer Function
 @nrp.MapRobotSubscriber("joint_state", Topic('/joint_states', sensor_msgs.msg.JointState))
 @nrp.MapCSVRecorder("recorder", filename="all_joints_positions.csv", headers=["Name", "time", "Position"])
 @nrp.Robot2Neuron()

@@ -1,4 +1,3 @@
-# Imported Python Transfer Function
 @nrp.MapCSVRecorder("recorder", filename="all_spikes.csv", headers=["id", "time"])
 @nrp.MapSpikeSink("record_neurons", nrp.brain.record, nrp.spike_recorder)
 @nrp.Neuron2Robot(Topic('/monitor/spike_recorder', cle_ros_msgs.msg.SpikeEvent))
