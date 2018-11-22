@@ -138,7 +138,7 @@ def evolve_new_generation(generation_dir):
     for i in pairs:
         if np.random.rand() < 0.1:
             parent1 = population[i[0]]
-            parent2 = population[i[1] - 1]
+            parent2 = population[i[1]]
             child1, child2 = one_point_crossover(parent1, parent2)
             population[i[0]] = child1
             population[i[1]] = child2
