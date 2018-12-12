@@ -31,8 +31,6 @@ def Sensor2Brain(t, ideal_wheel_speed, real_wheel_speed, recorder, camera, r1, r
         im_bw = im_bw[::4]
         iws = np.array(ideal_wheel_speed.value)
         rws = np.array(real_wheel_speed.value)
-        clientLogger.info(iws)
-        clientLogger.info(rws)
         visual_receptors = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16]
         rates = []
         for i in range(16):
