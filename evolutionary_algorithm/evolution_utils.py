@@ -11,12 +11,16 @@ def get_wheel_speeds(individual_dir, corrected=False):
         file_path = individual_dir + '/wheel_speeds.csv'
     else:
         file_path = individual_dir + '/corrected_wheel_speeds.csv'
-    return [i.strip().split(',') for i in open(file_path).readlines()][1:401]
+    wheel_speeds = [i.strip().split(',') for i in open(file_path).readlines()][1:401]
+    np.save(individual_dir + '/wheel_speeds', wheel_speeds)
+    return wheel_speeds
 
 
 def get_trajectory(individual_dir):
     file_path = individual_dir + '/robot_position.csv'
-    return [i.strip().split(',') for i in open(file_path).readlines()][1:401]
+    trajectory = [i.strip().split(',') for i in open(file_path).readlines()][1:401]
+    np.save(individual_dir + '/trajectory', trajectory)
+    return trajectory
 
 
 def fitness_function(wheel_speeds):

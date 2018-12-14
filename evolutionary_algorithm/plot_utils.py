@@ -1,12 +1,14 @@
+import os
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_trajectory(individual_dir, trajectory):
+def plot_trajectory(individual_dir):
 	"""
 	
 	"""
+	trajectory = np.load(individual_dir + '/trajectory.npy')
 	fig = plt.figure()
 	plt.gca()
 	plt.xticks([], [])
@@ -20,12 +22,12 @@ def plot_trajectory(individual_dir, trajectory):
 	plt.close()
 
 
-def plot_wheel_speeds(individual_dir, wheel_speeds):
+def plot_wheel_speeds(individual_dir):
 	"""
-	Reads the saved wheel speeds csv file and saves a plotted figure. It also
-	returns the wheel speeds array so that it can be used by other functions
+	Reads the saved wheel speeds and saves a plotted figure
 	"""
 
+	wheel_speeds = np.load(individual_dir + '/wheel_speeds.npy')
 	left_wheel = [float(t[1]) for t in wheel_speeds]
 	right_wheel = [float(t[2]) for t in wheel_speeds]
 	fig = plt.figure()
@@ -73,3 +75,13 @@ def column(matrix, i):
 	helper function to return a column from a 2d array 
 	"""
 	return [row[i] for row in matrix]
+
+def plot_results(generation_dir):
+	"""
+	"""
+	individuals = [s for s in os.listdir(generation_dir) if 'individual' in s]
+	for i in individuals:
+		plot_spikes(generation_dir + '/' + i)
+		plot_wheel_speeds(generation_dir + '/' + i)
+		plot_trajectory(generation_dir + '/' + i)
+

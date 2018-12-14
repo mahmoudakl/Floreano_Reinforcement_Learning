@@ -34,6 +34,7 @@ class FloreanoExperiment(object):
         self.fitness_log = []
         self.sim = None
         self.generations = generations
+        self.simulated = 0
         
         # Check if evolutionary experiment has been run before
         # If yes, load previously evolved population and continue
@@ -54,7 +55,7 @@ class FloreanoExperiment(object):
             else:
                 shutil.rmtree(last_gen_dir)
                 # If there's only one incomplete generation, start over
-                if self.cur_gen < 0:
+                if self.cur_gen == 0:
                     self.population = population
                 else:
                     last_gen_dir = self.experiment_dir + '/generation_{}'.format((self.cur_gen - 1)) 
@@ -129,11 +130,12 @@ class FloreanoExperiment(object):
                 print "Generation {}, Individual {}".format(i, j)
                 genetic_string = ','.join(str(x) for x in self.population[j].ravel())
                 self.sim.edit_brain(evolution_utils.brain % genetic_string)
-                #self.sim.add_transfer_function(display_episode_tf % "Generation {}, Individual {}".format(i, j))
+                self.sim.add_transfer_function(display_episode_tf % "Generation {}, Individual {}".format(i, j))
                 self.sim.start()
+                self.simulated += 40
                 
                 # run simulation for 40 seconds
-                self.wait_condition(10000, lambda x: x['simulationTime'] > 40)
+                self.wait_condition(10000, lambda x: x['simulationTime'] > self.simulated)
                 self.sim.pause()
                 self.save_simulation_data(i, j)
                 start = time.time()
