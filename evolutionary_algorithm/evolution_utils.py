@@ -5,6 +5,12 @@ import numpy as np
 
 def get_wheel_speeds(individual_dir, corrected=False):
     """
+    Loads the saved wheel speeds data for a specific individual. The loaded data can either be the
+    raw data recorded from the experiment, or the processed data that corrects for collisions
+
+    :param individual_dir: The directory containing the individual's saved results
+    :param corrected: Flag indicating whether the data loaded should be the raw data, or the
+                      processed data that corrects for collisions
     """
     if not corrected:
         file_path = individual_dir + '/wheel_speeds.csv'
@@ -18,8 +24,7 @@ def get_wheel_speeds(individual_dir, corrected=False):
 def get_trajectory(individual_dir):
     """
 
-    :param individual_dir:
-    :return:
+    :param individual_dir: The directory containing the individual's saved results
     """
     file_path = individual_dir + '/robot_position.csv'
     trajectory = [i.strip().split(',') for i in open(file_path).readlines()][1:401]
@@ -38,7 +43,6 @@ def fitness_function(wheel_speeds):
     for i in range(len(left_wheel)):
         if left_wheel[i] > 0 and right_wheel[i] > 0:
             fitness += (left_wheel[i] + right_wheel[i])
-    print len(left_wheel)
     return fitness/float(2*len(left_wheel))
 
 
@@ -135,7 +139,7 @@ def evolve_new_generation(generation_dir):
     Evolve a new generation based on the top performers of a previous generation
     using bt mutation, one-point cross over and elitism
 
-    :param generation_dir: Directory where all generation results are stored
+    :param generation_dir: The directory where all generation results are stored
     """
     top_performers = np.load(generation_dir + '/top_performers_individuals.npy')
     population = []
@@ -164,7 +168,15 @@ def evolve_new_generation(generation_dir):
 
 
 def correct_for_collisions(individual_dir):
-    wheel_speeds = get_wheel_speeds(individual_dir)
+    """
+    Loops through the robot trajectory and sets wheel speeds to zeros if the robot exceeded certain
+    thresholds in the x- and y-positions. These thresholds indicate that the robot has hit the wall
+
+    :param individual_dir: The directory containing the individual's saved results
+    """
+
+    # convert wheel_speeds to a numpy array to be able to broadcast zeros if a collision is detected
+    wheel_speeds = np.asarray(get_wheel_speeds(individual_dir))
     trajectory = get_trajectory(individual_dir)
     x_axis = [x[0] for x in trajectory]
     y_axis = [y[1] for y in trajectory]
@@ -172,11 +184,16 @@ def correct_for_collisions(individual_dir):
 
     for i in range(len(wheel_speeds)):
         if float(y_axis[i]) >= 2.4 or float(y_axis[i]) <= -2.4:
-            wheel_speeds[i][1] = '0.0'
+            wheel_speeds[i:, 1] = '0.0'
+            wheel_speeds[i:, 2] = '0.0'
             collision = True
         elif float(x_axis[i]) >= 3 or float(x_axis[i]) <= -3:
-            wheel_speeds[i][0] = '0.0'
+            wheel_speeds[i:, 1] = '0.0'
+            wheel_speeds[i:, 2] = '0.0'
             collision = True
+
+        if collision:
+            break
 
     # save corrected wheel speeds
     np.save(individual_dir + '/corrected_wheel_speeds', wheel_speeds)

@@ -31,7 +31,6 @@ class FloreanoExperiment(object):
         self.fitness_log = []
         self.sim = None
         self.generations = generations
-        self.simulated = 0
 
         # Check if evolutionary experiment has been run before
         # If yes, load previously evolved population and continue
@@ -92,11 +91,12 @@ class FloreanoExperiment(object):
         trajectory = evolution_utils.get_trajectory(individual_dir)
         collision = evolution_utils.correct_for_collisions(individual_dir)
 
-        # save fitness value
-        if collision:
-            fitness_value = -1
-        else:
-            fitness_value = evolution_utils.fitness_function(wheel_speeds)
+        # reload the wheel speeds after correcting for collisions
+        correct_wheel_speeds = np.load(individual_dir + '/corrected_wheel_speeds.npy')
+
+        # calculate and save fitness value
+        fitness_value = evolution_utils.fitness_function(correct_wheel_speeds)
+
         print "Fitness: {}".format(fitness_value)
         np.save(individual_dir + '/fitness_value', fitness_value)
 
@@ -118,15 +118,15 @@ class FloreanoExperiment(object):
                 self.sim.add_transfer_function(display_episode_tf % "Generation {}, Individual {}"
                                                .format(i, j))
                 self.sim.start()
-                self.simulated += 40
 
                 # run simulation for 40 seconds
-                self.wait_condition(10000, lambda x: x['simulationTime'] > self.simulated)
+                self.wait_condition(10000, lambda x: x['simulationTime'] > 40)
                 self.sim.pause()
                 self.save_simulation_data(i, j)
                 start = time.time()
                 self.sim.reset('full')
                 print "Reset Time: {}".format(time.time() - start)
+                print "================="
                 self.wait_condition(1000, lambda x: x['state'] == 'paused' and
                                     x['simulationTime'] == 0)
 
