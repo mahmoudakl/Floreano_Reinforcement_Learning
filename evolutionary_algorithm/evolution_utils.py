@@ -1,7 +1,6 @@
-import os
-import csv
-import numpy as np
 # This file contains helper functions to support running the Floreano Experiment
+
+import numpy as np
 
 
 def get_wheel_speeds(individual_dir, corrected=False):
@@ -17,6 +16,11 @@ def get_wheel_speeds(individual_dir, corrected=False):
 
 
 def get_trajectory(individual_dir):
+    """
+
+    :param individual_dir:
+    :return:
+    """
     file_path = individual_dir + '/robot_position.csv'
     trajectory = [i.strip().split(',') for i in open(file_path).readlines()][1:401]
     np.save(individual_dir + '/trajectory', trajectory)
@@ -33,7 +37,7 @@ def fitness_function(wheel_speeds):
     fitness = 0
     for i in range(len(left_wheel)):
         if left_wheel[i] > 0 and right_wheel[i] > 0:
-                   fitness += (left_wheel[i] + right_wheel[i])
+            fitness += (left_wheel[i] + right_wheel[i])
     print len(left_wheel)
     return fitness/float(2*len(left_wheel))
 
@@ -41,7 +45,7 @@ def fitness_function(wheel_speeds):
 def get_top_performers(generation_dir, num_performers=15):
     """
     Extract the indices of the top individuals from the fitness log
-    
+
     :param generation_dir: Directory where all generation results are stored
     :param num_performers: number for top performers to look for. Default value
                            is 15, which corresponds to a truncation threshold of
@@ -54,7 +58,7 @@ def get_top_performers(generation_dir, num_performers=15):
     # store all fitness values in a list
     for i in range(60):
         fitness_log.append(np.load(generation_dir + '/individual_{}'.format(i)
-            + '/fitness_value.npy'))
+                                   + '/fitness_value.npy'))
 
     # save generation average fitness value
     avg_fitness = np.average(fitness_log)
@@ -65,12 +69,13 @@ def get_top_performers(generation_dir, num_performers=15):
         max_index = np.argmax(fitness_log)
         top_performers_indices.append(max_index)
         top_performers_individuals.append(np.load(generation_dir +
-            '/individual_{}'.format(max_index) + '/genetic_string.npy'))
+                                                  '/individual_{}'.format(max_index) +
+                                                  '/genetic_string.npy'))
         fitness_log[max_index] = -1
 
     np.save(generation_dir + '/top_performers_indices', top_performers_indices)
-    np.save(generation_dir + '/top_performers_individuals',
-        top_performers_individuals)
+    np.save(generation_dir + '/top_performers_strings',
+            top_performers_individuals)
 
 
 def one_point_crossover(parent1, parent2):
@@ -102,7 +107,7 @@ def bit_mutation(population):
     Performs bit mutation on every item of every binary genetic string in a
     population with 5% probability
 
-    :param population: A list of binary genetic strings 
+    :param population: A list of binary genetic strings
     """
     for individual in population:
         individual = individual.reshape(290)
@@ -130,8 +135,7 @@ def evolve_new_generation(generation_dir):
     Evolve a new generation based on the top performers of a previous generation
     using bt mutation, one-point cross over and elitism
 
-    :param top_performers: A list containing the best performing 25% individuals
-                           of a population
+    :param generation_dir: Directory where all generation results are stored
     """
     top_performers = np.load(generation_dir + '/top_performers_individuals.npy')
     population = []
@@ -151,10 +155,10 @@ def evolve_new_generation(generation_dir):
     rand = np.random.randint(len(population))
     population[rand] = top_performers[0]
 
-    file = open("populations.txt","w") 
-    file.write(str(population))
-    file.write("\n")
-    file.close() 
+    f = open("populations.txt", "w")
+    f.write(str(population))
+    f.write("\n")
+    f.close()
 
     return population
 

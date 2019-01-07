@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 def plot_trajectory(individual_dir):
 	"""
-	
+
 	"""
 	trajectory = np.load(individual_dir + '/trajectory.npy')
 	fig = plt.figure()
@@ -72,16 +72,17 @@ def plot_spikes(individual_dir):
 
 def column(matrix, i):
 	"""
-	helper function to return a column from a 2d array 
+	helper function to return a column from a 2d array
 	"""
 	return [row[i] for row in matrix]
+
 
 def plot_results(generation_dir):
 	"""
 	"""
 	individuals = [s for s in os.listdir(generation_dir) if 'individual' in s]
 	for i in individuals:
+		print i
 		plot_spikes(generation_dir + '/' + i)
 		plot_wheel_speeds(generation_dir + '/' + i)
 		plot_trajectory(generation_dir + '/' + i)
-

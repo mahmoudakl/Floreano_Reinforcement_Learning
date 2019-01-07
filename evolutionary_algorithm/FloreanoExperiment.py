@@ -1,22 +1,18 @@
-# disable global logging from the virtual coach
-import logging
-logging.disable(logging.INFO)
-logging.getLogger('rospy').propagate = False
-logging.getLogger('rosout').propagate = False
-
 import os
-import sys
 import time
-import pandas
 import shutil
-import plot_utils
+import logging
 import evolution_utils
 
 import numpy as np
-import matplotlib.pyplot as plt
-from IPython.display import clear_output, display
 
+from IPython.display import clear_output
 from hbp_nrp_virtual_coach.virtual_coach import VirtualCoach
+
+# disable global logging from the virtual coach
+logging.disable(logging.INFO)
+logging.getLogger('rospy').propagate = False
+logging.getLogger('rosout').propagate = False
 
 vc = VirtualCoach(environment='local', storage_username='nrpuser', storage_password='password')
 
@@ -25,8 +21,9 @@ def display_episode_number(t):
     clientLogger.advertise('%s')
 """
 
+
 class FloreanoExperiment(object):
-    
+
     def __init__(self, experiment_name, population, generations):
         self.experiment_name = experiment_name
         self.experiment_dir = os.environ['HOME'] + '/.opt/nrpStorage/' + self.experiment_name
@@ -35,7 +32,7 @@ class FloreanoExperiment(object):
         self.sim = None
         self.generations = generations
         self.simulated = 0
-        
+
         # Check if evolutionary experiment has been run before
         # If yes, load previously evolved population and continue
         previous_generations = [s for s in os.listdir(self.experiment_dir) if "generation" in s]
@@ -58,20 +55,8 @@ class FloreanoExperiment(object):
                 if self.cur_gen == 0:
                     self.population = population
                 else:
-                    last_gen_dir = self.experiment_dir + '/generation_{}'.format((self.cur_gen - 1)) 
+                    last_gen_dir = self.experiment_dir + '/generation_{}'.format((self.cur_gen - 1))
                     self.population = evolution_utils.evolve_new_generation(last_gen_dir)
-
-    def wait_for_localhost(self, timeout):
-        """
-        helper method that waits for the localhost server to be available
-        again after stopping a simulation
-        """
-        start = time.time()
-        while time.time() < start + timeout:
-            time.sleep(2)
-            if 'localhost' in vc.print_available_servers():
-                return
-        raise Excpetion('Cannot find Localhost')
 
     def wait_condition(self, timeout, condition):
         """
@@ -89,7 +74,7 @@ class FloreanoExperiment(object):
     def on_status(self, status):
         """Prepends the most recent ROS status message to the last_status array"""
         self.last_status[0] = status
-        
+
     def save_simulation_data(self, generation, trial):
         """
         Saves the simulation csv data to the respective individual's directory inside the
@@ -97,7 +82,8 @@ class FloreanoExperiment(object):
         """
         self.sim.save_csv()
         csv_dir = [s for s in os.listdir(self.experiment_dir) if "csv_records" in s][0]
-        individual_dir = self.experiment_dir + '/generation_{}'.format(generation) + '/individual_{}'.format(trial)
+        individual_dir = self.experiment_dir + '/generation_{}'.format(generation) +\
+            '/individual_{}'.format(trial)
         shutil.move(self.experiment_dir + '/' + csv_dir, individual_dir)
         np.save(individual_dir + '/genetic_string', self.population[trial])
 
@@ -114,26 +100,26 @@ class FloreanoExperiment(object):
         print "Fitness: {}".format(fitness_value)
         np.save(individual_dir + '/fitness_value', fitness_value)
 
-
     def run_experiment(self):
         # launch experiment and register status callback
         self.sim = vc.launch_experiment('floreano_0', server='localhost')
         self.sim.register_status_callback(self.on_status)
 
-        for i in range(self.cur_gen, self.generations):    
+        for i in range(self.cur_gen, self.generations):
             # Create directory for generation data
             os.mkdir(self.experiment_dir + '/generation_{}'.format(i))
-            
+
             # Iterate over individuals in a population
             for j in range(60):
                 clear_output(wait=True)
                 print "Generation {}, Individual {}".format(i, j)
                 genetic_string = ','.join(str(x) for x in self.population[j].ravel())
                 self.sim.edit_brain(evolution_utils.brain % genetic_string)
-                self.sim.add_transfer_function(display_episode_tf % "Generation {}, Individual {}".format(i, j))
+                self.sim.add_transfer_function(display_episode_tf % "Generation {}, Individual {}"
+                                               .format(i, j))
                 self.sim.start()
                 self.simulated += 40
-                
+
                 # run simulation for 40 seconds
                 self.wait_condition(10000, lambda x: x['simulationTime'] > self.simulated)
                 self.sim.pause()
@@ -141,15 +127,17 @@ class FloreanoExperiment(object):
                 start = time.time()
                 self.sim.reset('full')
                 print "Reset Time: {}".format(time.time() - start)
-                self.wait_condition(1000, lambda x: x['state'] == 'paused' and x['simulationTime'] == 0)
+                self.wait_condition(1000, lambda x: x['state'] == 'paused' and
+                                    x['simulationTime'] == 0)
 
             evolution_utils.get_top_performers(self.experiment_dir + '/generation_{}'.format(i))
-            self.population = evolution_utils.evolve_new_generation(self.experiment_dir + '/generation_{}'.format(i))
+            self.population = evolution_utils.evolve_new_generation(self.experiment_dir +
+                                                                    '/generation_{}'.format(i))
 
 
 # random population of 10 binary genetic strings
 # it will be only used if there are no previous results stored
-population = np.random.randint(2, size=(60, 10, 29)) 
+population = np.random.randint(2, size=(60, 10, 29))
 
 floreano_experiment = FloreanoExperiment('floreano_0', population, 30)
 floreano_experiment.run_experiment()
