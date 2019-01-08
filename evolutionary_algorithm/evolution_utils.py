@@ -141,7 +141,7 @@ def evolve_new_generation(generation_dir):
 
     :param generation_dir: The directory where all generation results are stored
     """
-    top_performers = np.load(generation_dir + '/top_performers_individuals.npy')
+    top_performers = np.load(generation_dir + '/top_performers_strings.npy')
     population = []
     for i in range(len(top_performers)):
         for j in range(4):
