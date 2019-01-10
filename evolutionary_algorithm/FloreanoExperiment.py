@@ -34,15 +34,16 @@ class FloreanoExperiment(object):
 
         # Check if evolutionary experiment has been run before
         # If yes, load previously evolved population and continue
-        previous_generations = [s for s in os.listdir(self.experiment_dir) if "generation" in s]
+        previous_generations = [int(s.split('_')[1]) for s in os.listdir(self.experiment_dir)
+                                if "generation" in s]
         previous_generations.sort()
         if len(previous_generations) == 0:
             self.population = population
             self.cur_gen = 0
         else:
-            last_gen_dir = self.experiment_dir + '/' + previous_generations[-1]
+            last_gen_dir = self.experiment_dir + '/generation_{}'.format(previous_generations[-1])
             # current generation number
-            self.cur_gen = int(previous_generations[-1].split('_')[1])
+            self.cur_gen = previous_generations[-1]
             individuals = [s for s in os.listdir(last_gen_dir) if "individual" in s]
             # If generation has not been fully simulated, delete it and start from the previous one
             if len(individuals) >= 60:
