@@ -41,9 +41,9 @@ class FloreanoExperiment(object):
             self.population = population
             self.cur_gen = 0
         else:
-            last_gen_dir = self.experiment_dir + '/generation_{}'.format(previous_generations[-1])
             # current generation number
             self.cur_gen = previous_generations[-1]
+            last_gen_dir = self.experiment_dir + '/generation_{}'.format(self.cur_gen)
             individuals = [s for s in os.listdir(last_gen_dir) if "individual" in s]
             # If generation has not been fully simulated, delete it and start from the previous one
             if len(individuals) >= 60:
