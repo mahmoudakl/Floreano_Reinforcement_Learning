@@ -119,12 +119,15 @@ def column(matrix, i):
     return [row[i] for row in matrix]
 
 
-def plot_results(generation_dir):
+def plot_results(results_dir):
     """
     """
-    individuals = [s for s in os.listdir(generation_dir) if 'individual' in s]
-    for i in individuals:
-        print i
-        plot_spikes(generation_dir + '/' + i)
-        plot_wheel_speeds(generation_dir + '/' + i)
-        plot_trajectory(generation_dir + '/' + i)
+    generations_dirs = [g for g in os.listdir(results_dir) if 'generation' in g]
+    for generation in generations_dirs:
+        generation_dir = results_dir + '/' + generation
+        individuals = [s for s in os.listdir(generation_dir) if 'individual' in s]
+        for i in individuals:
+            print "{}\n{}\n==============".format(generation, i)
+            plot_spikes(generation_dir + '/' + i)
+            plot_wheel_speeds(generation_dir + '/' + i)
+            plot_trajectory(generation_dir + '/' + i)
