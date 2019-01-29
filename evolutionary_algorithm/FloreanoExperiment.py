@@ -32,6 +32,9 @@ class FloreanoExperiment(object):
         self.sim = None
         self.generations = generations
 
+        # keep track of the simulation time, as the reset call is not executed at the precise time
+        self.current_simulation_time = 0
+
         # Check if evolutionary experiment has been run before
         # If yes, load previously evolved population and continue
         previous_generations = [int(s.split('_')[1]) for s in os.listdir(self.experiment_dir)
@@ -105,6 +108,7 @@ class FloreanoExperiment(object):
         # launch experiment and register status callback
         self.sim = vc.launch_experiment('floreano_0', server='localhost')
         self.sim.register_status_callback(self.on_status)
+        self.sim.add_transfer_function(display_episode_tf % "Generation 1, Individual 1")
 
         for i in range(self.cur_gen, self.generations):
             # Create directory for generation data
@@ -113,23 +117,22 @@ class FloreanoExperiment(object):
             # Iterate over individuals in a population
             for j in range(60):
                 clear_output(wait=True)
-                print "Generation {}, Individual {}".format(i, j)
+                print "Generation {}, Individual {}".format(i + 1, j + 1)
+                self.sim.edit_transfer_function('display_episode_number', display_episode_tf %
+                    "Generation {}, Individual {}".format(i + 1, j + 1))
                 genetic_string = ','.join(str(x) for x in self.population[j].ravel())
                 self.sim.edit_brain(evolution_utils.brain % genetic_string)
-                self.sim.add_transfer_function(display_episode_tf % "Generation {}, Individual {}"
-                                               .format(i, j))
                 self.sim.start()
 
                 # run simulation for 40 seconds
-                self.wait_condition(10000, lambda x: x['simulationTime'] > 40)
+                self.wait_condition(10000, lambda x: x['simulationTime'] > self.current_simulation_time + 40)
                 self.sim.pause()
                 self.save_simulation_data(i, j)
-                start = time.time()
-                self.sim.reset('full')
-                print "Reset Time: {}".format(time.time() - start)
-                print "================="
-                self.wait_condition(1000, lambda x: x['state'] == 'paused' and
-                                    x['simulationTime'] == 0)
+
+                # reset the robot pose
+                self.sim.reset('robot_pose')
+                self.wait_condition(1000, lambda x: x['state'] == 'paused')
+                self.current_simulation_time = self.last_status[0]['simulationTime']
 
             evolution_utils.get_top_performers(self.experiment_dir + '/generation_{}'.format(i))
             self.population = evolution_utils.evolve_new_generation(self.experiment_dir +
