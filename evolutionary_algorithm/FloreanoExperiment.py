@@ -1,12 +1,16 @@
 import os
 import time
+import rospy
 import shutil
 import logging
 import evolution_utils
 
 import numpy as np
 
+from gazebo_msgs.msg import ModelState
 from IPython.display import clear_output
+from geometry_msgs.msg import Pose, Twist
+from tf.transformations import quaternion_from_euler
 from hbp_nrp_virtual_coach.virtual_coach import VirtualCoach
 
 # disable global logging from the virtual coach
@@ -32,8 +36,10 @@ class FloreanoExperiment(object):
         self.sim = None
         self.generations = generations
 
+        self._set_model_state = rospy.Publisher("/gazebo/set_model_state", ModelState)
+
         # keep track of the simulation time, as the reset call is not executed at the precise time
-        self.current_simulation_time = 0
+        self.cur_sim_time = 0
 
         # Check if evolutionary experiment has been run before
         # If yes, load previously evolved population and continue
@@ -60,6 +66,30 @@ class FloreanoExperiment(object):
                 else:
                     last_gen_dir = self.experiment_dir + '/generation_{}'.format((self.cur_gen - 1))
                     self.population = evolution_utils.evolve_new_generation(last_gen_dir)
+
+    def set_random_robot_pose(self):
+        """
+        sets the robot pose to a random pose within the box
+        """
+        msg = ModelState()
+        msg.model_name = 'robot'
+        msg.reference_frame = 'world'
+        msg.scale.x = msg.scale.y = msg.scale.z = 1.0
+
+        # random position within box
+        msg.pose.position.x = np.random.uniform(-3, 3)
+        msg.pose.position.y = np.random.uniform(-2.4, 2.4)
+        msg.pose.position.z = 0.18
+
+        # random orientation
+        quaternion = quaternion_from_euler(0, 0, np.random.uniform(-np.pi/2, np.pi/2))
+        msg.pose.orientation.x = quaternion[0]
+        msg.pose.orientation.y = quaternion[1]
+        msg.pose.orientation.z = quaternion[2]
+        msg.pose.orientation.w = quaternion[3]
+
+        # publish message on ros topic
+        self._set_model_state.publish(msg)
 
     def wait_condition(self, timeout, condition):
         """
@@ -92,7 +122,7 @@ class FloreanoExperiment(object):
 
         wheel_speeds = evolution_utils.get_wheel_speeds(individual_dir)
         np.save(individual_dir + '/wheel_speeds', wheel_speeds)
-        trajectory = evolution_utils.get_trajectory(individual_dir)
+        path = evolution_utils.get_trajectory(individual_dir)
         collision = evolution_utils.correct_for_collisions(individual_dir)
 
         # reload the wheel speeds after correcting for collisions
@@ -118,21 +148,22 @@ class FloreanoExperiment(object):
             for j in range(60):
                 clear_output(wait=True)
                 print "Generation {}, Individual {}".format(i + 1, j + 1)
+                self.set_random_robot_pose()
                 self.sim.edit_transfer_function('display_episode_number', display_episode_tf %
-                    "Generation {}, Individual {}".format(i + 1, j + 1))
+                                                "Generation {}, Individual {}".format(i + 1, j + 1))
                 genetic_string = ','.join(str(x) for x in self.population[j].ravel())
                 self.sim.edit_brain(evolution_utils.brain % genetic_string)
                 self.sim.start()
 
                 # run simulation for 40 seconds
-                self.wait_condition(10000, lambda x: x['simulationTime'] > self.current_simulation_time + 40)
+                self.wait_condition(10000, lambda x: x['simulationTime'] > self.cur_sim_time + 40)
                 self.sim.pause()
                 self.save_simulation_data(i, j)
 
                 # reset the robot pose
                 self.sim.reset('robot_pose')
                 self.wait_condition(1000, lambda x: x['state'] == 'paused')
-                self.current_simulation_time = self.last_status[0]['simulationTime']
+                self.cur_sim_time = self.last_status[0]['simulationTime']
 
             evolution_utils.get_top_performers(self.experiment_dir + '/generation_{}'.format(i))
             self.population = evolution_utils.evolve_new_generation(self.experiment_dir +
