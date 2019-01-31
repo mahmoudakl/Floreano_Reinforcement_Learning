@@ -24,6 +24,22 @@ def plot_average_fitness(results_dir):
     plt.close()
 
 
+def plot_sensory_input(pixel_values, ylabel="Pixel intensities"):
+    """
+    Plots array values in bars. Useful for viewing input pixel intensities or receptors' firing
+    probabilities
+
+    :param pixel_values: Array containing values to be plotted in bars
+    :param ylabel: Label to be displayed on the y-axis of the plot
+    """
+    plt.bar(range(len(pixel_values)), pixel_values, color='black')
+    plt.xlim(0, len(pixel_values))
+    plt.ylim(0, np.abs(max(pixel_values)))
+    plt.xlabel("Receptors")
+    plt.ylabel(ylabel)
+    plt.show()
+
+
 def plot_best_fitness(results_dir):
     """
     Plots the best fitness value achieved per generation across all generations and saves the plot

@@ -1,7 +1,12 @@
 # Imported Python Transfer Function
 import numpy as np
 import cv2
+
+
 @nrp.MapRobotSubscriber("camera", Topic('/husky/camera', sensor_msgs.msg.Image))
+@nrp.MapRobotPublisher("firing_probs_pub", Topic('/floreano/visualization/firing_probabilities', sensor_msgs.msg.Image))
+@nrp.MapVariable("fig", initial_value=None)
+@nrp.MapVariable("bridge", initial_value=None)
 @nrp.MapVariable("ideal_wheel_speed", global_key="ideal_wheel_speed", initial_value=[0.0,0.0], scope=nrp.GLOBAL)
 @nrp.MapVariable("real_wheel_speed", global_key="real_wheel_speed", initial_value=[0.0,0.0], scope=nrp.GLOBAL)
 @nrp.MapCSVRecorder("recorder", filename="receptors.csv", headers=["time", "Receptors_Rates"])
@@ -24,8 +29,14 @@ import cv2
 @nrp.MapSpikeSource("r17", nrp.map_neurons(nrp.brain.receptors[16], lambda i: nrp.brain.brain[i]), nrp.fixed_frequency, weight=1)
 @nrp.MapSpikeSource("r18", nrp.map_neurons(nrp.brain.receptors[17], lambda i: nrp.brain.brain[i]), nrp.fixed_frequency, weight=1)
 @nrp.Robot2Neuron()
-def Sensor2Brain(t, ideal_wheel_speed, real_wheel_speed, recorder, camera, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18):
-    bridge = CvBridge()
+def Sensor2Brain(t, ideal_wheel_speed, real_wheel_speed, recorder, bridge, fig, firing_probs_pub, camera, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18):
+    import matplotlib.pyplot as plt
+
+    if bridge.value is None:
+        plt.switch_backend('Agg')
+        fig.value, _ = plt.subplots(1, figsize=(6, 6))
+        bridge = CvBridge()
+
     if not isinstance(camera.value, type(None)):
         (thresh, im_bw) = cv2.threshold(bridge.imgmsg_to_cv2(camera.value, "mono8"), 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
         im_bw = im_bw[::4]
@@ -45,6 +56,20 @@ def Sensor2Brain(t, ideal_wheel_speed, real_wheel_speed, recorder, camera, r1, r
                 visual_receptors[i].rate = 10
             else:
                 visual_receptors[i].rate = 0
+        # Plot Receptors' firing probabilities
+        plt.clf()
+        plt.bar(range(len(rates)), rates, color='black')
+        plt.xlim(0, len(rates))
+        plt.ylim(0, 1)
+        fig.value.canvas.draw()
+        plt.tight_layout()
+
+        # Convert and publish the image on a ROS topic
+        img_data = np.fromstring(fig.value.canvas.tostring_rgb(), dtype=np.uint8)
+        img_data = img_data.reshape(fig.value.canvas.get_width_height()[::-1] + (3,))
+        ros_img = bridge.cv2_to_imgmsg(img_data, 'rgb8')
+        firing_probs_pub.send_message(ros_img)
+
         if np.random.rand() <= 0.1:
             r17.rate = 10
             r18.rate = 10
