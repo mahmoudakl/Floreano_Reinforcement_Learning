@@ -9,7 +9,6 @@ import numpy as np
 
 from gazebo_msgs.msg import ModelState
 from IPython.display import clear_output
-from geometry_msgs.msg import Pose, Twist
 from tf.transformations import quaternion_from_euler
 from hbp_nrp_virtual_coach.virtual_coach import VirtualCoach
 
@@ -40,6 +39,11 @@ class FloreanoExperiment(object):
 
         # keep track of the simulation time, as the reset call is not executed at the precise time
         self.cur_sim_time = 0
+
+        # remove any previously saved csv_recorders' data
+        csv_dirs = [s for s in os.listdir(self.experiment_dir) if "csv_records" in s]
+        for directory in csv_dirs:
+            shutil.rmtree(self.experiment_dir + '/' + directory)
 
         # Check if evolutionary experiment has been run before
         # If yes, load previously evolved population and continue
@@ -113,8 +117,9 @@ class FloreanoExperiment(object):
         Saves the simulation csv data to the respective individual's directory inside the
         experiment's directory
         """
-        self.sim.save_csv()
-        csv_dir = [s for s in os.listdir(self.experiment_dir) if "csv_records" in s][0]
+        csv_dirs = [s for s in os.listdir(self.experiment_dir) if "csv_records" in s]
+        csv_dirs.sort()
+        csv_dir = csv_dirs[-1]
         individual_dir = self.experiment_dir + '/generation_{}'.format(generation) +\
             '/individual_{}'.format(trial)
         shutil.move(self.experiment_dir + '/' + csv_dir, individual_dir)
