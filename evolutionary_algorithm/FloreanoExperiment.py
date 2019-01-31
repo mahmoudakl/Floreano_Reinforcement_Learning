@@ -31,8 +31,8 @@ class FloreanoExperiment(object):
         self.experiment_name = experiment_name
         self.experiment_dir = os.environ['HOME'] + '/.opt/nrpStorage/' + self.experiment_name
         self.last_status = [None]
-        self.fitness_log = []
         self.sim = None
+        self.initial_pose = np.array([])
         self.generations = generations
 
         self._set_model_state = rospy.Publisher("/gazebo/set_model_state", ModelState)
@@ -80,13 +80,16 @@ class FloreanoExperiment(object):
         msg.reference_frame = 'world'
         msg.scale.x = msg.scale.y = msg.scale.z = 1.0
 
+        initial_pose = np.array([np.random.uniform(-3, 3), np.random.uniform(-2.4, 2.4), 0.18,
+                                 np.random.uniform(0, np.pi)])
+
         # random position within box
-        msg.pose.position.x = np.random.uniform(-3, 3)
-        msg.pose.position.y = np.random.uniform(-2.4, 2.4)
-        msg.pose.position.z = 0.18
+        msg.pose.position.x = initial_pose[0]
+        msg.pose.position.y = initial_pose[1]
+        msg.pose.position.z = initial_pose[2]
 
         # random orientation
-        quaternion = quaternion_from_euler(0, 0, np.random.uniform(-np.pi/2, np.pi/2))
+        quaternion = quaternion_from_euler(0, 0, initial_pose[3])
         msg.pose.orientation.x = quaternion[0]
         msg.pose.orientation.y = quaternion[1]
         msg.pose.orientation.z = quaternion[2]
@@ -94,6 +97,8 @@ class FloreanoExperiment(object):
 
         # publish message on ros topic
         self._set_model_state.publish(msg)
+
+        return initial_pose
 
     def wait_condition(self, timeout, condition):
         """
@@ -125,9 +130,12 @@ class FloreanoExperiment(object):
         shutil.move(self.experiment_dir + '/' + csv_dir, individual_dir)
         np.save(individual_dir + '/genetic_string', self.population[trial])
 
+        # save the robot's initial pose in this run
+        np.save(individual_dir + '/initial_pose', self.initial_pose)
+
         wheel_speeds = evolution_utils.get_wheel_speeds(individual_dir)
         np.save(individual_dir + '/wheel_speeds', wheel_speeds)
-        path = evolution_utils.get_trajectory(individual_dir)
+        robot_path = evolution_utils.get_robot_path(individual_dir)
         collision = evolution_utils.correct_for_collisions(individual_dir)
 
         # reload the wheel speeds after correcting for collisions
@@ -153,7 +161,7 @@ class FloreanoExperiment(object):
             for j in range(60):
                 clear_output(wait=True)
                 print "Generation {}, Individual {}".format(i + 1, j + 1)
-                self.set_random_robot_pose()
+                self.initial_pose = self.set_random_robot_pose()
                 self.sim.edit_transfer_function('display_episode_number', display_episode_tf %
                                                 "Generation {}, Individual {}".format(i + 1, j + 1))
                 genetic_string = ','.join(str(x) for x in self.population[j].ravel())

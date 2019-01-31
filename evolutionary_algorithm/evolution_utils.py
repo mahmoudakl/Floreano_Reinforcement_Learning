@@ -21,15 +21,15 @@ def get_wheel_speeds(individual_dir, corrected=False):
     return wheel_speeds
 
 
-def get_trajectory(individual_dir):
+def get_robot_path(individual_dir):
     """
 
     :param individual_dir: The directory containing the individual's saved results
     """
     file_path = individual_dir + '/robot_position.csv'
-    trajectory = [i.strip().split(',') for i in open(file_path).readlines()][1:401]
-    np.save(individual_dir + '/trajectory', trajectory)
-    return trajectory
+    robot_path = [i.strip().split(',') for i in open(file_path).readlines()][1:401]
+    np.save(individual_dir + '/robot_path', robot_path)
+    return robot_path
 
 
 def fitness_function(wheel_speeds):
@@ -169,7 +169,7 @@ def evolve_new_generation(generation_dir):
 
 def correct_for_collisions(individual_dir):
     """
-    Loops through the robot trajectory and sets wheel speeds to zeros if the robot exceeded certain
+    Loops through the robot path and sets wheel speeds to zeros if the robot exceeded certain
     thresholds in the x- and y-positions. These thresholds indicate that the robot has hit the wall
 
     :param individual_dir: The directory containing the individual's saved results
@@ -177,9 +177,9 @@ def correct_for_collisions(individual_dir):
 
     # convert wheel_speeds to a numpy array to be able to broadcast zeros if a collision is detected
     wheel_speeds = np.asarray(get_wheel_speeds(individual_dir))
-    trajectory = get_trajectory(individual_dir)
-    x_axis = [x[0] for x in trajectory]
-    y_axis = [y[1] for y in trajectory]
+    robot_path = get_robot_path(individual_dir)
+    x_axis = [x[0] for x in robot_path]
+    y_axis = [y[1] for y in robot_path]
     collision = False
 
     for i in range(len(wheel_speeds)):

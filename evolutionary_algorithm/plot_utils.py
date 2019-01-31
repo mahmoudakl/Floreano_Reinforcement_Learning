@@ -62,21 +62,23 @@ def plot_best_fitness(results_dir):
     plt.close()
 
 
-def plot_trajectory(individual_dir):
+def plot_robot_path(individual_dir):
     """
 
     """
-    trajectory = np.load(individual_dir + '/trajectory.npy')
+    robot_path = np.load(individual_dir + '/robot_path.npy')
+    robot_initial_pose = np.load(individual_dir + '/initial_pose.npy')
     fig = plt.figure()
     plt.gca()
     plt.xticks([], [])
     plt.yticks([], [])
     plt.ylim(-3, 3)
     plt.xlim(-3.9, 3.9)
-    x_axis = [x[0] for x in trajectory]
-    y_axis = [y[1] for y in trajectory]
+    x_axis = [x[0] for x in robot_path]
+    y_axis = [y[1] for y in robot_path]
     plt.plot([float(x) for x in x_axis], [float(y) for y in y_axis])
-    fig.savefig(individual_dir + '/trajectory.png')
+    plt.plot(float(x_axis[0]), float(y_axis[0]), marker=(3, 0, np.rad2deg(robot_initial_pose[-1])))
+    fig.savefig(individual_dir + '/robot_path.png')
     plt.close()
 
 
@@ -146,4 +148,4 @@ def plot_results(results_dir):
             print "{}\n{}\n==============".format(generation, i)
             plot_spikes(generation_dir + '/' + i)
             plot_wheel_speeds(generation_dir + '/' + i)
-            plot_trajectory(generation_dir + '/' + i)
+            plot_robot_path(generation_dir + '/' + i)
