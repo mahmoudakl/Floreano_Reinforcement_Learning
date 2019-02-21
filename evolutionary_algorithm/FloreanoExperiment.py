@@ -135,8 +135,8 @@ class FloreanoExperiment(object):
 
         wheel_speeds = evolution_utils.get_wheel_speeds(individual_dir)
         np.save(individual_dir + '/wheel_speeds', wheel_speeds)
-        robot_path = evolution_utils.get_robot_path(individual_dir)
-        collision = evolution_utils.correct_for_collisions(individual_dir)
+        _ = evolution_utils.get_robot_path(individual_dir)
+        _ = evolution_utils.correct_for_collisions(individual_dir)
 
         # reload the wheel speeds after correcting for collisions
         correct_wheel_speeds = np.load(individual_dir + '/corrected_wheel_speeds.npy')
@@ -171,10 +171,13 @@ class FloreanoExperiment(object):
                 # run simulation for 40 seconds
                 self.wait_condition(10000, lambda x: x['simulationTime'] > self.cur_sim_time + 40)
                 self.sim.pause()
-                self.save_simulation_data(i, j)
 
                 # reset the robot pose
                 self.sim.reset('robot_pose')
+
+                # preserve the data from the previous run
+                self.save_simulation_data(i, j)
+
                 self.wait_condition(1000, lambda x: x['state'] == 'paused')
                 self.cur_sim_time = self.last_status[0]['simulationTime']
 
