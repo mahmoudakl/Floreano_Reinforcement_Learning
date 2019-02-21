@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import rospy
 import shutil
@@ -100,14 +101,18 @@ class FloreanoExperiment(object):
 
         return initial_pose
 
-    def wait_condition(self, timeout, condition):
+    def wait_condition(self, timeout, condition, verbose=False):
         """
         Helper method that blocks for the timeout specified, until the condition
-        given has been fulfilled
+        given has been fulfilled and continuously prints the current simulation time
         """
         start = time.time()
         while time.time() < start + timeout:
             time.sleep(1)
+            if verbose:
+                sys.stdout.write("Simulation Time: {}\r".format(
+                    self.last_status[0]['simulationTime']))
+                sys.stdout.flush()
             if self.last_status[0] is not None:
                 if condition(self.last_status[0]):
                     return
@@ -144,7 +149,8 @@ class FloreanoExperiment(object):
         # calculate and save fitness value
         fitness_value = evolution_utils.fitness_function(correct_wheel_speeds)
 
-        print "Fitness: {}".format(fitness_value)
+        print("Fitness: {}".format(fitness_value))
+        print("=================")
         np.save(individual_dir + '/fitness_value', fitness_value)
 
     def run_experiment(self):
@@ -160,7 +166,7 @@ class FloreanoExperiment(object):
             # Iterate over individuals in a population
             for j in range(60):
                 clear_output(wait=True)
-                print "Generation {}, Individual {}".format(i + 1, j + 1)
+                print("Generation {}, Individual {}".format(i + 1, j + 1))
                 self.initial_pose = self.set_random_robot_pose()
                 self.sim.edit_transfer_function('display_episode_number', display_episode_tf %
                                                 "Generation {}, Individual {}".format(i + 1, j + 1))
@@ -169,7 +175,8 @@ class FloreanoExperiment(object):
                 self.sim.start()
 
                 # run simulation for 40 seconds
-                self.wait_condition(10000, lambda x: x['simulationTime'] > self.cur_sim_time + 40)
+                self.wait_condition(10000, lambda x: x['simulationTime'] > self.cur_sim_time + 40,
+                                    verbose=True)
                 self.sim.pause()
 
                 # reset the robot pose

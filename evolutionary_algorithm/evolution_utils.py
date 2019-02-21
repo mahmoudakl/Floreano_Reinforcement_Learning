@@ -16,8 +16,7 @@ def get_wheel_speeds(individual_dir, corrected=False):
         file_path = individual_dir + '/wheel_speeds.csv'
     else:
         file_path = individual_dir + '/corrected_wheel_speeds.csv'
-    wheel_speeds = [i.strip().split(',') for i in open(file_path).readlines()][1:401]
-    np.save(individual_dir + '/wheel_speeds', wheel_speeds)
+    wheel_speeds = [i.strip().split(',') for i in open(file_path).readlines()][2:402]
     return wheel_speeds
 
 
@@ -199,6 +198,13 @@ def correct_for_collisions(individual_dir):
     np.save(individual_dir + '/corrected_wheel_speeds', wheel_speeds)
     return collision
 
+
+brain_tf = """import numpy as np
+@nrp.MapVariable('genetic_string', initial_value=None, scope=nrp.GLOBAL)
+@nrp.Robot2Neuron()
+def dna(t, genetic_string):
+    genetic_string.value = np.array([int(x) for x in '%s'.split(',')]).reshape(10, 29)
+"""
 
 brain = """from hbp_nrp_cle.brainsim import simulator as sim
 import numpy as np
