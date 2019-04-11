@@ -14,17 +14,18 @@ logger = logging.getLogger(__name__)
 l = np.random.randint(2, size=(10, 29))
 receptors = []
 for r in range(11, 29):
-    receptors.append(np.nonzero(l[:,r])[0])
+    receptors.append(np.nonzero(l[:, r])[0])
 """
 Structure of the dna array: 
 -Binary values
--Each row repersents a neuron
+-Each row represents a neuron
 -First bit: the neuron is inhibitory (0) or excitatory (1) 
 -Next 10 bits: from which brain neurons does the current neuron receive input (1), self connections allowed
 -Next 18 bits: which sensory neurons are connected (1) or disconnected (0) to the neuron (only exitatory synapses)
 """
 
-def create_brain(dna = l):
+
+def create_brain(dna=l):
     """
     Initializes PyNN with the neuronal network that has to be simulated
     """
@@ -48,17 +49,21 @@ def create_brain(dna = l):
 
     SYN = sim.StaticSynapse(**SYNAPSE_PARAMS)
 
-    row_counter=0
+    row_counter = 0
     for row in dna:
-    	logger.info(row)
+        logger.info(row)
         n = np.array(row)
         for i in range(1, 11):
-            if n[i]==1:
+            if n[i] == 1:
                 r_type = 'excitatory' if dna[i - 1][0] else 'inhibitory'
-            	logger.info('Synapse from Neuron: ' + str(i) + ' to ' + str(row_counter + 1)+' ' + r_type)
-                sim.Projection(presynaptic_population=CIRCUIT[row_counter:row_counter + 1], postsynaptic_population=CIRCUIT[i-1:i], connector=sim.OneToOneConnector(), synapse_type=SYN, receptor_type=r_type)
-        
-        row_counter+=1
+                logger.info('Synapse from Neuron: ' + str(i) + ' to ' + str(row_counter + 1)+' ' +
+                            r_type)
+                sim.Projection(presynaptic_population=CIRCUIT[row_counter:row_counter + 1],
+                               postsynaptic_population=CIRCUIT[i-1:i],
+                               connector=sim.OneToOneConnector(), synapse_type=SYN,
+                               receptor_type=r_type)
+
+        row_counter += 1
 
     sim.initialize(population, v=population.get('v_rest'))
 

@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import rospy
 import shutil
@@ -34,7 +33,6 @@ class FloreanoExperiment(object):
         self.last_status = [None]
         self.sim = None
         self.initial_pose = np.array([])
-        self.generations = generations
 
         self._set_model_state = rospy.Publisher("/gazebo/set_model_state", ModelState)
 
@@ -46,14 +44,6 @@ class FloreanoExperiment(object):
         for directory in csv_dirs:
             shutil.rmtree(self.experiment_dir + '/' + directory)
 
-        # Check if evolutionary experiment has been run before
-        # If yes, load previously evolved population and continue
-        previous_generations = [int(s.split('_')[1]) for s in os.listdir(self.experiment_dir)
-                                if "generation" in s]
-        previous_generations.sort()
-        if len(previous_generations) == 0:
-            self.population = population
-            self.cur_gen = 0
         else:
             # current generation number
             self.cur_gen = previous_generations[-1]
@@ -101,18 +91,14 @@ class FloreanoExperiment(object):
 
         return initial_pose
 
-    def wait_condition(self, timeout, condition, verbose=False):
+    def wait_condition(self, timeout, condition):
         """
         Helper method that blocks for the timeout specified, until the condition
-        given has been fulfilled and continuously prints the current simulation time
+        given has been fulfilled
         """
         start = time.time()
         while time.time() < start + timeout:
             time.sleep(1)
-            if verbose:
-                sys.stdout.write("Simulation Time: {}\r".format(
-                    self.last_status[0]['simulationTime']))
-                sys.stdout.flush()
             if self.last_status[0] is not None:
                 if condition(self.last_status[0]):
                     return
@@ -140,8 +126,8 @@ class FloreanoExperiment(object):
 
         wheel_speeds = evolution_utils.get_wheel_speeds(individual_dir)
         np.save(individual_dir + '/wheel_speeds', wheel_speeds)
-        _ = evolution_utils.get_robot_path(individual_dir)
-        _ = evolution_utils.correct_for_collisions(individual_dir)
+        robot_path = evolution_utils.get_robot_path(individual_dir)
+        collision = evolution_utils.correct_for_collisions(individual_dir)
 
         # reload the wheel speeds after correcting for collisions
         correct_wheel_speeds = np.load(individual_dir + '/corrected_wheel_speeds.npy')
@@ -149,8 +135,7 @@ class FloreanoExperiment(object):
         # calculate and save fitness value
         fitness_value = evolution_utils.fitness_function(correct_wheel_speeds)
 
-        print("Fitness: {}".format(fitness_value))
-        print("=================")
+        print "Fitness: {}".format(fitness_value)
         np.save(individual_dir + '/fitness_value', fitness_value)
 
     def run_experiment(self):
@@ -166,7 +151,7 @@ class FloreanoExperiment(object):
             # Iterate over individuals in a population
             for j in range(60):
                 clear_output(wait=True)
-                print("Generation {}, Individual {}".format(i + 1, j + 1))
+                print "Generation {}, Individual {}".format(i + 1, j + 1)
                 self.initial_pose = self.set_random_robot_pose()
                 self.sim.edit_transfer_function('display_episode_number', display_episode_tf %
                                                 "Generation {}, Individual {}".format(i + 1, j + 1))
@@ -175,16 +160,12 @@ class FloreanoExperiment(object):
                 self.sim.start()
 
                 # run simulation for 40 seconds
-                self.wait_condition(10000, lambda x: x['simulationTime'] > self.cur_sim_time + 40,
-                                    verbose=True)
+                self.wait_condition(10000, lambda x: x['simulationTime'] > self.cur_sim_time + 40)
                 self.sim.pause()
+                self.save_simulation_data(i, j)
 
                 # reset the robot pose
                 self.sim.reset('robot_pose')
-
-                # preserve the data from the previous run
-                self.save_simulation_data(i, j)
-
                 self.wait_condition(1000, lambda x: x['state'] == 'paused')
                 self.cur_sim_time = self.last_status[0]['simulationTime']
 
