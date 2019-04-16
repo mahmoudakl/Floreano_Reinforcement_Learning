@@ -11,7 +11,7 @@ import gazebo_msgs.msg
 @nrp.MapSpikeSink("right_wheel_forward_neuron", nrp.brain.actors[2], nrp.population_rate)
 @nrp.MapSpikeSink("right_wheel_back_neuron", nrp.brain.actors[3], nrp.population_rate)
 @nrp.MapVariable("ideal_wheel_speed", global_key="ideal_wheel_speed", initial_value=[0.0,0.0], scope=nrp.GLOBAL)
-@nrp.Neuron2Robot(Topic('/husky/wheel_speeds', gazebo_msgs.msg.WheelSpeeds))
+@nrp.Neuron2Robot(Topic('/robot/husky/wheel_speeds', gazebo_msgs.msg.WheelSpeeds))
 def Brain2Motor(t, ideal_wheel_speed, left_wheel_forward_neuron, left_wheel_back_neuron, right_wheel_forward_neuron, right_wheel_back_neuron):
     """
     The transfer function which calculates the linear twist of the husky robot based on the

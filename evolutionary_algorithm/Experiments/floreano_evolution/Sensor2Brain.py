@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 
 
-@nrp.MapRobotSubscriber("camera", Topic('/husky/camera', sensor_msgs.msg.Image))
+@nrp.MapRobotSubscriber("camera", Topic('robot/husky/camera', sensor_msgs.msg.Image))
 @nrp.MapRobotPublisher("firing_probs_pub", Topic('/floreano/visualization/firing_probabilities', sensor_msgs.msg.Image))
 @nrp.MapVariable("fig", initial_value=None)
 @nrp.MapVariable("bridge", initial_value=None)
@@ -57,23 +57,23 @@ def Sensor2Brain(t, ideal_wheel_speed, real_wheel_speed, recorder, bridge, fig, 
             else:
                 visual_receptors[i].rate = 0
         # Plot Receptors' firing probabilities
-        plt.clf()
-        plt.bar(range(len(rates)), rates, color='black')
-        plt.xlim(0, len(rates))
-        plt.ylim(0, 1)
-        fig.value.canvas.draw()
-        plt.tight_layout()
+        #plt.clf()
+        #plt.bar(range(len(rates)), rates, color='black')
+        #plt.xlim(0, len(rates))
+        #plt.ylim(0, 1)
+        #fig.value.canvas.draw()
+        #plt.tight_layout()
 
         # Convert and publish the image on a ROS topic
-        img_data = np.fromstring(fig.value.canvas.tostring_rgb(), dtype=np.uint8)
-        img_data = img_data.reshape(fig.value.canvas.get_width_height()[::-1] + (3,))
-        ros_img = bridge.cv2_to_imgmsg(img_data, 'rgb8')
-        firing_probs_pub.send_message(ros_img)
+        #img_data = np.fromstring(fig.value.canvas.tostring_rgb(), dtype=np.uint8)
+        #img_data = img_data.reshape(fig.value.canvas.get_width_height()[::-1] + (3,))
+        #ros_img = bridge.cv2_to_imgmsg(img_data, 'rgb8')
+        #firing_probs_pub.send_message(ros_img)
 
-        if np.random.rand() <= 0.1:
-            r17.rate = 10
-            r18.rate = 10
-        else:
-            r17.rate = 0
-            r18.rate = 0
+        #if np.random.rand() <= 0.1:
+        #    r17.rate = 10
+        #    r18.rate = 10
+        #else:
+        #    r17.rate = 0
+        #    r18.rate = 0
         recorder.record_entry(t, rates)

@@ -1,5 +1,5 @@
 @nrp.MapCSVRecorder("recorder", filename="wheel_speeds.csv", headers=["time", "Left_wheel_speed", "Right_wheel_speed"])
-@nrp.MapRobotSubscriber("joint_state", Topic('/joint_states', gazebo_msgs.msg.ModelStates))
+@nrp.MapRobotSubscriber("joint_state", Topic('/robot/joint_states', sensor_msgs.msg.JointState))
 
 @nrp.MapVariable("real_wheel_speed", global_key="real_wheel_speed", initial_value=[0.0,0.0], scope=nrp.GLOBAL)
 
