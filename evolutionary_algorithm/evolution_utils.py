@@ -33,8 +33,8 @@ def get_robot_path(individual_dir):
 
 def fitness_function(wheel_speeds):
     """
-    Calculates the fitness function described in the Floreano paper
-    according to the saved wheel speeds
+    Calculates the fitness function described in the Floreano paper according to the saved wheel
+    speeds
     """
     left_wheel = [float(t[1]) for t in wheel_speeds]
     right_wheel = [float(t[2]) for t in wheel_speeds]

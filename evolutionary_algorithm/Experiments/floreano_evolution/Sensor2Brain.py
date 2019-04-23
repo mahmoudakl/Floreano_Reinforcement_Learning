@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 
 
-@nrp.MapRobotSubscriber("camera", Topic('robot/husky/camera', sensor_msgs.msg.Image))
+@nrp.MapRobotSubscriber("camera", Topic('/kevin/husky/camera', sensor_msgs.msg.Image))
 @nrp.MapRobotPublisher("firing_probs_pub", Topic('/floreano/visualization/firing_probabilities', sensor_msgs.msg.Image))
 @nrp.MapVariable("fig", initial_value=None)
 @nrp.MapVariable("bridge", initial_value=None)
@@ -39,18 +39,18 @@ def Sensor2Brain(t, ideal_wheel_speed, real_wheel_speed, recorder, bridge, fig, 
 
     if not isinstance(camera.value, type(None)):
         (thresh, im_bw) = cv2.threshold(bridge.imgmsg_to_cv2(camera.value, "mono8"), 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-        im_bw = im_bw[::4]
+        im_bw = im_bw[0][::4]
         iws = np.array(ideal_wheel_speed.value)
         rws = np.array(real_wheel_speed.value)
         visual_receptors = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16]
         rates = []
         for i in range(16):
             if i not in (0, 15):
-                rate = abs((im_bw.item(i - 1)*(-0.5) + im_bw.item(i) + im_bw.item(i + 1)*(-0.5))/255.)
+                rate = abs((im_bw[i - 1]*(-0.5) + im_bw[i] + im_bw.item(i + 1)*(-0.5))/255.)
             elif i == 0:
-                rate = abs((im_bw.item(i)*(-0.5) + im_bw.item(i) + im_bw.item(i + 1)*(-0.5))/255.)
+                rate = abs((im_bw[i]*(-0.5) + im_bw[i] + im_bw[i + 1]*(-0.5))/255.)
             else:
-                rate = abs((im_bw.item(i - 1)*(-0.5) + im_bw.item(i) + im_bw.item(i)*(-0.5))/255.)
+                rate = abs((im_bw[i - 1]*(-0.5) + im_bw[i] + im_bw[i]*(-0.5))/255.)
             rates.append(rate)
             if np.random.rand() <= rate:
                 visual_receptors[i].rate = 10
@@ -70,10 +70,10 @@ def Sensor2Brain(t, ideal_wheel_speed, real_wheel_speed, recorder, bridge, fig, 
         #ros_img = bridge.cv2_to_imgmsg(img_data, 'rgb8')
         #firing_probs_pub.send_message(ros_img)
 
-        #if np.random.rand() <= 0.1:
-        #    r17.rate = 10
-        #    r18.rate = 10
-        #else:
-        #    r17.rate = 0
-        #    r18.rate = 0
+        if np.random.rand() <= 0.1:
+            r17.rate = 10
+            r18.rate = 10
+        else:
+            r17.rate = 0
+            r18.rate = 0
         recorder.record_entry(t, rates)
