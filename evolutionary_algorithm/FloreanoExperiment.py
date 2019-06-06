@@ -33,6 +33,7 @@ class FloreanoExperiment(object):
         self.last_status = [None]
         self.sim = None
         self.initial_pose = np.array([])
+        self.generations = generations
 
         self._set_model_state = rospy.Publisher("/gazebo/set_model_state", ModelState)
 
@@ -44,6 +45,15 @@ class FloreanoExperiment(object):
         for directory in csv_dirs:
             shutil.rmtree(self.experiment_dir + '/' + directory)
 
+        # Check if evolutionary experiment has been run before
+        # If yes, load previously evolved population and continue
+        previous_generations = [int(s.split('_')[1]) for s in os.listdir(self.experiment_dir)
+                                if "generation" in s]
+        previous_generations.sort()
+
+        if len(previous_generations) == 0:
+            self.population = population
+            self.cur_gen = 0
         else:
             # current generation number
             self.cur_gen = previous_generations[-1]
