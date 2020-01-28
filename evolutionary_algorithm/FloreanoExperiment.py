@@ -150,7 +150,7 @@ class FloreanoExperiment(object):
 
     def run_experiment(self):
         # launch experiment and register status callback
-        self.sim = vc.launch_experiment('floreano_0', server='localhost')
+        self.sim = vc.launch_experiment('floreano_evolution_0', server='localhost')
         self.sim.register_status_callback(self.on_status)
         self.sim.add_transfer_function(display_episode_tf % "Generation 1, Individual 1")
 
@@ -188,5 +188,5 @@ class FloreanoExperiment(object):
 # it will be only used if there are no previous results stored
 population = np.random.randint(2, size=(60, 10, 29))
 
-floreano_experiment = FloreanoExperiment('floreano_0', population, 30)
+floreano_experiment = FloreanoExperiment('floreano_evolution_0', population, 30)
 floreano_experiment.run_experiment()
