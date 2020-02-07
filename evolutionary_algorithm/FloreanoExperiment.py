@@ -172,11 +172,12 @@ class FloreanoExperiment(object):
                 # run simulation for 40 seconds
                 self.wait_condition(10000, lambda x: x['simulationTime'] > self.cur_sim_time + 40)
                 self.sim.pause()
+                time.sleep(2)
                 self.save_simulation_data(i, j)
 
                 # reset the robot pose
                 self.sim.reset('robot_pose')
-                self.wait_condition(1000, lambda x: x['state'] == 'paused')
+                self.wait_condition(10000, lambda x: x['state'] == 'paused')
                 self.cur_sim_time = self.last_status[0]['simulationTime']
 
             evolution_utils.get_top_performers(self.experiment_dir + '/generation_{}'.format(i))

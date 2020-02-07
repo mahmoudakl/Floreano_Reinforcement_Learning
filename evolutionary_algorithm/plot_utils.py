@@ -14,7 +14,7 @@ def plot_average_fitness(results_dir):
     avg_fitness = []
     generations = [d for d in os.listdir(results_dir) if 'generation' in d]
     for g in generations:
-        avg_fitness.append(np.load(results_dir + '/' + g + '/average_fitness.npy'))
+        avg_fitness.append(np.load(results_dir + '/' + g + '/average_fitness.npy', allow_pickle=True))
 
     fig = plt.figure()
     plt.plot(avg_fitness)
@@ -50,9 +50,9 @@ def plot_best_fitness(results_dir):
     best_fitness = []
     generations = [d for d in os.listdir(results_dir) if 'generation' in d]
     for g in generations:
-        best_performer = np.load(results_dir + '/' + g + '/top_performers_indices.npy')[0]
+        best_performer = np.load(results_dir + '/' + g + '/top_performers_indices.npy', allow_pickle=True)[0]
         best_fitness.append(np.load(results_dir + '/' + g + '/individual_{}/fitness_value.npy'.
-                                    format(best_performer)))
+                                    format(best_performer), allow_pickle=True))
 
     fig = plt.figure()
     plt.plot(best_fitness)
@@ -66,8 +66,8 @@ def plot_robot_path(individual_dir):
     """
 
     """
-    robot_path = np.load(individual_dir + '/robot_path.npy')
-    robot_initial_pose = np.load(individual_dir + '/initial_pose.npy')
+    robot_path = np.load(individual_dir + '/robot_path.npy', allow_pickle=True)
+    robot_initial_pose = np.load(individual_dir + '/initial_pose.npy', allow_pickle=True)
     fig = plt.figure()
     plt.gca()
     plt.xticks([], [])
@@ -87,7 +87,7 @@ def plot_wheel_speeds(individual_dir):
     Reads the saved wheel speeds and saves a plotted figure
     """
 
-    wheel_speeds = np.load(individual_dir + '/wheel_speeds.npy')
+    wheel_speeds = np.load(individual_dir + '/wheel_speeds.npy', allow_pickle=True)
     left_wheel = [float(t[1]) for t in wheel_speeds]
     right_wheel = [float(t[2]) for t in wheel_speeds]
     fig = plt.figure()
